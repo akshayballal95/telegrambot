@@ -1,0 +1,7 @@
+python-telegram-bot
+smolagents
+openai
+telebot
+python-dotenv
+requests
+aiohttp

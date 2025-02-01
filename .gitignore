@@ -1,0 +1,14 @@
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+
+# jupyter
+.ipynb_checkpoints/
+
+# vscode
+.vscode/
+
+voice_message.ogg
