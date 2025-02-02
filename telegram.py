@@ -70,7 +70,7 @@ available_categories = [
         "description": "Hygiene. Use this category to get information about hygiene, hygiene services, and other support services.",
     },
     {
-        "name": "food",
+        "name": "foodAndClothing",
         "description": "Food and clothing distribution. Use this category to get information about food, clothing distribution, and other support services.",
     },
     {
