@@ -282,8 +282,8 @@ async def handle_message(message):
     final_prompt = (
         "The agent has replied with the following: "
         + str(agent_output)
-        + "Format the output for telegram. "
-        + "If there are phone numbers and addresses in the output, make sure to list them properly by highlighting them. Query: \n"
+        + "Instructions: \n Format the output for telegram. "
+        + "If there are phone numbers and addresses in the output, make sure to list them properly by highlighting them. \n Query: \n"
         + message.text
     )
 
