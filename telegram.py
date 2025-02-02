@@ -5,6 +5,7 @@ from telebot.async_telebot import AsyncTeleBot
 import asyncio
 import os
 import dotenv
+import sys
 
 from smolagents import ToolCallingAgent, OpenAIServerModel, Tool
 from schema import schema
@@ -221,6 +222,9 @@ class UnRelatedQuestionTool(Tool):
 # Initialize your Telegram bot with your token from BotFather
 bot = AsyncTeleBot(TELEGRAM_TOKEN)
 
+# Add a flag to control the bot's running state
+is_bot_running = True
+
 agent = ToolCallingAgent(
     tools=[
         GroqQueryTool(
@@ -270,7 +274,7 @@ async def handle_message(message):
         "You have the following categories: "
         + json.dumps(available_categories)
         + "Do not include the category in the results. You can use multiple tools."
-        + "Reply in markdown format and include the address, website and phone numbers."
+        + "Reply such that it is easy to read on telegram and include website and phone numbers."
         + "Question: "
         + message.text
     )
@@ -278,30 +282,28 @@ async def handle_message(message):
     # Get agent output
     agent_output = agent.run(query, reset=True)
 
-    # Prepare final prompt
-    final_prompt = (
-        "The agent has replied with the following: "
-        + str(agent_output)
-        + "Instructions: \n Format the output for telegram. "
-        + "If there are phone numbers and addresses in the output, make sure to list them properly by highlighting them. \n Query: \n"
-        + message.text
-    )
+    # # Prepare final prompt
+    # final_prompt = (
+    #     "The agent has replied with the following: "
+    #     + str(agent_output)
+    #     + "Instructions: \n Format the output for telegram. "
+    #     + "If there are phone numbers and addresses in the output, make sure to list them properly by highlighting them. \n Query: \n"
+    #     + message.text
+    # )
 
     # Get OpenAI response
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": final_prompt}],
-        stream=False,  # Changed to False for simplicity
-    )
+    # response = client.chat.completions.create(
+    #     model="gpt-4o-mini",
+    #     messages=[{"role": "user", "content": final_prompt}],
+    #     stream=False,  # Changed to False for simplicity
+    # )
 
     # Send the response
     try:
-        await bot.reply_to(
-            message, response.choices[0].message.content, parse_mode="Markdown"
-        )
+        await bot.reply_to(message, agent_output, parse_mode="Markdown")
     except Exception as e:
         # Fallback without markdown if markdown parsing fails
-        await bot.reply_to(message, response.choices[0].message.content)
+        await bot.reply_to(message, agent_output)
 
 
 @bot.message_handler(content_types=["voice"])
@@ -335,9 +337,21 @@ async def handle_voice(message):
 # Function to run the bot
 async def main():
     print("Bot started...")
-    await bot.polling(non_stop=True)
+    try:
+        await bot.polling(non_stop=True, timeout=60)
+    except Exception as e:
+        print(f"Bot polling error: {e}")
+        # Add a small delay before restarting
+        await asyncio.sleep(5)
+    finally:
+        # Close the session
+        await bot.close_session()
 
 
 # Run the bot
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Bot stopped gracefully")
+        sys.exit(0)
