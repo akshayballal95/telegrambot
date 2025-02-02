@@ -3,14 +3,25 @@ from openai import OpenAI
 import json
 from telebot.async_telebot import AsyncTeleBot
 import asyncio
+import os
+import dotenv
 
 from smolagents import ToolCallingAgent, OpenAIServerModel, Tool
 from schema import schema
-import os
 
-import dotenv
+# Only load .env file if it exists (local development)
+if os.path.exists(".env"):
+    dotenv.load_dotenv()
 
-dotenv.load_dotenv()
+# Get environment variables with fallbacks
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+SANITY_API_KEY = os.getenv("SANITY_API_KEY")
+
+if not all([TELEGRAM_TOKEN, OPENAI_API_KEY, SANITY_API_KEY]):
+    raise ValueError(
+        "Missing required environment variables. Please check your configuration."
+    )
 
 available_categories = [
     {
@@ -208,7 +219,6 @@ class UnRelatedQuestionTool(Tool):
 
 
 # Initialize your Telegram bot with your token from BotFather
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 bot = AsyncTeleBot(TELEGRAM_TOKEN)
 
 agent = ToolCallingAgent(
